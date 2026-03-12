@@ -92,7 +92,7 @@
                         @if($log->old_values || $log->new_values)
                         <button class="btn btn-secondary btn-xs"
                             x-data
-                            x-on:click="$dispatch('open-log-detail', { antes: {{ json_encode($log->old_values) }}, depois: {{ json_encode($log->new_values) }} })">
+                            x-on:click="$dispatch('open-log-detail', { antes: {{ json_encode($log->old_values) }}, depois: {{ json_encode($log->new_values) }}, modelId: '{{ $log->model_id }}', modelType: '{{ $log->model_type }}', action: '{{ $log->action }}' })">
                             Ver
                         </button>
                         @endif
@@ -111,23 +111,30 @@
     </div>
 
     {{-- Modal detalhe --}}
-    <div x-data="{ show: false, antes: null, depois: null }"
-         x-on:open-log-detail.window="show = true; antes = $event.detail.antes; depois = $event.detail.depois"
+    <div x-data="{ show: false, antes: null, depois: null, modelId: null, modelType: null, action: null }"
+         x-on:open-log-detail.window="show = true; antes = $event.detail.antes; depois = $event.detail.depois; modelId = $event.detail.modelId; modelType = $event.detail.modelType; action = $event.detail.action"
          x-show="show"
-         style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;">
-        <div style="background:#fff;border-radius:8px;padding:28px;max-width:680px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.18);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                <h3 style="margin:0;">Detalhe da Alteração</h3>
-                <button x-on:click="show=false" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-muted);">&times;</button>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+         class="modal-overlay"
+         wire:click="$set('showModal', false)">
+        <div class="modal modal-lg" @click.stop>
+            <div class="modal-header">
                 <div>
-                    <p style="font-weight:600;margin-bottom:8px;font-size:13px;">Antes</p>
-                    <pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:300px;" x-text="antes ? JSON.stringify(antes, null, 2) : '—'"></pre>
+                    <h2>Detalhe da Alteração</h2>
+                    <p style="margin:4px 0 0 0;font-size:13px;color:var(--text-muted);" x-text="modelType && modelId ? `${modelType} #${modelId}` : ''"></p>
+                    <p style="margin:4px 0 0 0;font-size:12px;color:var(--text-muted);" x-text="action ? `Ação: ${action}` : ''"></p>
                 </div>
-                <div>
-                    <p style="font-weight:600;margin-bottom:8px;font-size:13px;">Depois</p>
-                    <pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:300px;" x-text="depois ? JSON.stringify(depois, null, 2) : '—'"></pre>
+                <button x-on:click="show=false" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div>
+                        <p style="font-weight:600;margin-bottom:8px;font-size:13px;">Antes</p>
+                        <pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:300px;" x-text="antes ? JSON.stringify(antes, null, 2) : '—'"></pre>
+                    </div>
+                    <div>
+                        <p style="font-weight:600;margin-bottom:8px;font-size:13px;">Depois</p>
+                        <pre style="background:#f5f5f5;padding:12px;border-radius:6px;font-size:12px;overflow:auto;max-height:300px;" x-text="depois ? JSON.stringify(depois, null, 2) : '—'"></pre>
+                    </div>
                 </div>
             </div>
         </div>
