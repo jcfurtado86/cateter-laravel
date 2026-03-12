@@ -65,7 +65,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', trim(@file_get_contents('/etc/timezone') ?: shell_exec('timedatectl show --property=Timezone --value') ?: 'UTC')),
 
     /*
     |--------------------------------------------------------------------------

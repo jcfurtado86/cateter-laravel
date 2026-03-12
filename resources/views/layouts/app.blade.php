@@ -48,6 +48,6 @@
          class="alert alert-success">
         <span x-text="message"></span>
     </div>
-    @livewireScripts
+    @livewireScriptConfig
 </body>
 </html>

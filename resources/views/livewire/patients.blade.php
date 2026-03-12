@@ -116,7 +116,8 @@
                         </div>
                         <div class="form-group">
                             <label>Telefone</label>
-                            <input type="tel" wire:model="phone" maxlength="11" />
+                            <input type="tel" wire:model="phone" maxlength="15"
+                                x-mask:dynamic="$input.replace(/\D/g,'').length > 10 ? '(##) #####-####' : '(##) ####-####'" />
                         </div>
                     </div>
                     <div class="modal-actions">

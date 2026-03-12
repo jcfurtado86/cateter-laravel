@@ -3,12 +3,20 @@
 namespace App\Livewire;
 
 use App\Models\CatheterRecord;
+use App\Models\Notification;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Dashboard extends Component
 {
     public array $stats = ['total' => 0, 'overdue' => 0, 'urgent' => 0, 'warning' => 0];
     public array $alerts = [];
+
+    // Modal notificação
+    public bool   $showNotifModal = false;
+    public string $notifPatientId = '';
+    public string $notifPhone     = '';
+    public string $notifMessage   = '';
     public array $extraStats = [
         'inserted_today' => 0,
         'removed_today'  => 0,
@@ -99,6 +107,53 @@ class Dashboard extends Component
             ->get()
             ->toArray();
 
+    }
+
+    public function openNotifModal(string $recordId): void
+    {
+        $r = CatheterRecord::with('patient')->findOrFail($recordId);
+        $this->notifPatientId = $r->patient->id;
+        $this->notifPhone     = $r->patient->phone ?? '';
+
+        $name           = $r->patient->full_name;
+        $insertionDate  = \Carbon\Carbon::parse($r->insertion_date)->format('d/m/Y');
+        $maxRemovalDate = \Carbon\Carbon::parse($r->max_removal_date)->format('d/m/Y');
+        $days           = (int) ceil((strtotime($r->max_removal_date) - time()) / 86400);
+
+        if ($days <= 0) {
+            $status = "O prazo de retirada está VENCIDO desde {$maxRemovalDate}. A retirada é urgente.";
+        } elseif ($days === 1) {
+            $status = "O prazo de retirada é AMANHÃ ({$maxRemovalDate}). A retirada deve ser agendada com urgência.";
+        } elseif ($days <= 3) {
+            $status = "O prazo de retirada vence em {$days} dias ({$maxRemovalDate}). Por favor, agende a retirada.";
+        } else {
+            $status = "O prazo máximo para retirada é {$maxRemovalDate} ({$days} dias restantes).";
+        }
+
+        $this->notifMessage   = "Olá! Este é um aviso do Hospital referente ao paciente {$name}.\n\nCateter inserido em {$insertionDate} — indicação: {$r->indication}.\n{$status}";
+        $this->showNotifModal = true;
+    }
+
+    public function sendNotification(): void
+    {
+        $this->validate([
+            'notifPhone'   => 'required|string',
+            'notifMessage' => 'required|string',
+        ]);
+
+        Notification::create([
+            'id'         => Str::uuid(),
+            'patient_id' => $this->notifPatientId,
+            'sent_by_id' => auth()->id(),
+            'phone'      => $this->notifPhone,
+            'type'       => 'MANUAL',
+            'message'    => $this->notifMessage,
+            'status'     => 'SENT',
+            'sent_at'    => now(),
+        ]);
+
+        $this->showNotifModal = false;
+        $this->dispatch('toast', message: 'Notificação registrada com sucesso!');
     }
 
     public function render()

@@ -186,6 +186,7 @@
                                 <td><span class="alert-badge {{ $r['alert_level'] }}">{{ $labels[$r['alert_level']] }}</span></td>
                                 <td class="actions-cell">
                                     <a href="{{ route('patients.show', $r['patient_id']) }}" class="btn btn-secondary btn-xs">Ver</a>
+                                    <button wire:click="openNotifModal('{{ $r['id'] }}')" class="btn btn-success btn-xs">Notificar</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -194,4 +195,33 @@
             </div>
         @endif
     </div>
+
+    @if($showNotifModal)
+        <div class="modal-overlay" wire:click="$set('showNotifModal', false)">
+            <div class="modal" wire:click.stop>
+                <div class="modal-header">
+                    <h2>Enviar Notificação</h2>
+                    <button class="modal-close" wire:click="$set('showNotifModal', false)">×</button>
+                </div>
+                <form wire:submit="sendNotification" class="modal-form">
+                    <div class="form-group">
+                        <label>Destinatário</label>
+                        <p style="margin:4px 0 0; font-weight:500; color:var(--gray-800);">{{ $notifPhone ?: '—' }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Mensagem</label>
+                        <textarea wire:model="notifMessage" rows="6" style="resize:vertical;"></textarea>
+                        @error('notifMessage') <span class="field-error">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-ghost" wire:click="$set('showNotifModal', false)">Cancelar</button>
+                        <button type="submit" class="btn btn-success" wire:loading.attr="disabled">
+                            <span wire:loading.remove>Enviar</span>
+                            <span wire:loading>Enviando...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 </div>

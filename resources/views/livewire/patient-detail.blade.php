@@ -5,11 +5,12 @@
             <h1>{{ $patient->full_name }}</h1>
             <p class="text-muted">Prontuário: {{ $patient->record_number }}</p>
         </div>
-        @if(auth()->user()->role === 'DOCTOR')
-            <div class="header-actions">
+        <div class="header-actions">
+            <button wire:click="openNotifModal" class="btn btn-success">Enviar Notificação</button>
+            @if(auth()->user()->role === 'DOCTOR')
                 <button wire:click="openNewCatheter" class="btn btn-primary">+ Registrar Cateter</button>
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     @php
@@ -40,7 +41,7 @@
             <div class="card {{ $cardClass }}" style="border-top:4px solid {{ $days <= 0 ? '#ef4444' : ($days <= 3 ? '#f59e0b' : '#22c55e') }}; display:flex; flex-direction:column;">
                 <div class="card-header-row"><h3>Cateter Ativo</h3></div>
                 <dl class="data-list" style="flex:1;">
-                    <dt>Inserção</dt><dd>{{ \Carbon\Carbon::parse($active->insertion_date)->format('d/m/Y') }}</dd>
+                    <dt>Inserção</dt><dd>{{ \Carbon\Carbon::parse($active->insertion_date)->format('d/m/Y H:i') }}</dd>
                     <dt>Indicação</dt><dd>{{ $active->indication }}</dd>
                     <dt>Calibre</dt><dd>{{ $active->caliber }}</dd>
                     <dt>Lado</dt><dd>{{ $active->insertion_side === 'DIREITO' ? 'Direito' : 'Esquerdo' }}</dd>
@@ -87,14 +88,14 @@
                     <tbody>
                         @foreach($patient->catheterRecords->sortBy(fn($r) => [is_null($r->removed_at) ? 0 : 1, -$r->insertion_date->timestamp]) as $r)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($r->insertion_date)->format('d/m/Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($r->insertion_date)->format('d/m/Y H:i') }}</td>
                                 <td>{{ $r->procedure_type === 'ELETIVO' ? 'Eletivo' : 'Urgência' }}</td>
                                 <td>{{ $r->indication }}</td>
                                 <td>{{ $r->caliber }}</td>
                                 <td>{{ \Carbon\Carbon::parse($r->max_removal_date)->format('d/m/Y') }}</td>
                                 <td>
                                     @if($r->removed_at)
-                                        {{ \Carbon\Carbon::parse($r->removed_at)->format('d/m/Y') }}
+                                        {{ \Carbon\Carbon::parse($r->removed_at)->format('d/m/Y H:i') }}
                                     @else
                                         <span class="badge badge-active">Ativo</span>
                                     @endif
@@ -104,6 +105,8 @@
                                 <td>
                                     @if(!$r->removed_at && auth()->user()->role === 'DOCTOR')
                                         <button wire:click="openEditCatheter('{{ $r->id }}')" class="btn btn-secondary btn-xs">Editar</button>
+                                    @elseif($r->removed_at)
+                                        <button wire:click="openDetailModal('{{ $r->id }}')" class="btn btn-ghost btn-xs">Ver detalhes</button>
                                     @endif
                                 </td>
                             </tr>
@@ -113,6 +116,36 @@
             </div>
         @endif
     </div>
+
+    {{-- Modal Notificação --}}
+    @if($showNotifModal)
+        <div class="modal-overlay" wire:click="$set('showNotifModal', false)">
+            <div class="modal" wire:click.stop>
+                <div class="modal-header">
+                    <h2>Enviar Notificação</h2>
+                    <button class="modal-close" wire:click="$set('showNotifModal', false)">×</button>
+                </div>
+                <form wire:submit="sendNotification" class="modal-form">
+                    <div class="form-group">
+                        <label>Destinatário</label>
+                        <p style="margin:4px 0 0; font-weight:500; color:var(--gray-800);">{{ $notifPhone ?: '—' }}</p>
+                    </div>
+                    <div class="form-group">
+                        <label>Mensagem</label>
+                        <textarea wire:model="notifMessage" rows="6" style="resize:vertical;"></textarea>
+                        @error('notifMessage') <span class="field-error">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-ghost" wire:click="$set('showNotifModal', false)">Cancelar</button>
+                        <button type="submit" class="btn btn-success" wire:loading.attr="disabled">
+                            <span wire:loading.remove>Enviar</span>
+                            <span wire:loading>Enviando...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     {{-- Modal Cateter --}}
     @if($showCatheterModal)
@@ -128,8 +161,8 @@
                     @endif
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Data de Colocação</label>
-                            <input type="date" wire:model="insertionDate" />
+                            <label>Data e Hora de Colocação</label>
+                            <input type="datetime-local" wire:model="insertionDate" />
                             @error('insertionDate') <span class="field-error">{{ $message }}</span> @enderror
                         </div>
                         <div class="form-group">
@@ -195,6 +228,36 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal Detalhes Cateter --}}
+    @if($showDetailModal && $detailRecord)
+        <div class="modal-overlay" wire:click="$set('showDetailModal', false)">
+            <div class="modal" wire:click.stop>
+                <div class="modal-header">
+                    <h2>Detalhes do Cateter</h2>
+                    <button class="modal-close" wire:click="$set('showDetailModal', false)">×</button>
+                </div>
+                <dl class="data-list" style="padding:0 4px;">
+                    <dt>Inserção</dt><dd>{{ $detailRecord['insertion_date'] }}</dd>
+                    <dt>Tipo de Procedimento</dt><dd>{{ $detailRecord['procedure_type'] }}</dd>
+                    <dt>Indicação</dt><dd>{{ $detailRecord['indication'] }}</dd>
+                    <dt>Calibre</dt><dd>{{ $detailRecord['caliber'] }}</dd>
+                    <dt>Lado</dt><dd>{{ $detailRecord['insertion_side'] }}</dd>
+                    <dt>Tipo de Passagem</dt><dd>{{ $detailRecord['passage_type'] }}</dd>
+                    <dt>Fio de Segurança</dt><dd>{{ $detailRecord['safety_wire'] }}</dd>
+                    <dt>Cateter Prévio</dt><dd>{{ $detailRecord['had_previous_catheter'] }}</dd>
+                    <dt>Prazo Mín. Retirada</dt><dd>{{ $detailRecord['min_removal_date'] }}</dd>
+                    <dt>Prazo Máx. Retirada</dt><dd>{{ $detailRecord['max_removal_date'] }}</dd>
+                    <dt>Retirado em</dt><dd>{{ $detailRecord['removed_at'] }}</dd>
+                    <dt>Cadastrado por</dt><dd>{{ $detailRecord['created_by'] }}</dd>
+                    <dt>Retirado por</dt><dd>{{ $detailRecord['removed_by'] }}</dd>
+                </dl>
+                <div class="modal-actions" style="margin-top:16px;">
+                    <button class="btn btn-ghost" wire:click="$set('showDetailModal', false)">Fechar</button>
+                </div>
             </div>
         </div>
     @endif

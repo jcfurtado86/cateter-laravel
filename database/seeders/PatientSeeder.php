@@ -17,8 +17,6 @@ class PatientSeeder extends Seeder
         'Felipe Araujo', 'Beatriz Nascimento', 'Gustavo Monteiro', 'Larissa Cunha', 'Paulo Mendes',
         'Renata Cavalcante', 'Thiago Correia', 'Aline Pinto', 'Diego Melo', 'Vanessa Cardoso',
         'Bruno Teixeira', 'Simone Castro', 'Leandro Vieira', 'Mariana Moreira', 'Rodrigo Nunes',
-        'Cristiane Freitas', 'Leonardo Ramos', 'Débora Lopes', 'Fábio Marques', 'Tatiane Sousa',
-        'Alexandre Fernandes', 'Priscila Rocha', 'Henrique Borges', 'Natália Campos', 'Sérgio Pires',
     ];
 
     private array $indicacoes = [
@@ -42,13 +40,14 @@ class PatientSeeder extends Seeder
             $nascimento = Carbon::now()->subYears(rand(35, 82))->subDays(rand(0, 365));
 
             $patient = Patient::create([
-                'full_name'     => $nome,
-                'record_number' => 'PRT' . str_pad($i + 1001, 5, '0', STR_PAD_LEFT),
-                'birth_date'    => $nascimento->format('Y-m-d'),
-                'sex'           => $sexo,
-                'race'          => $racas[array_rand($racas)],
-                'phone'         => '119' . rand(10000000, 99999999),
-                'active'        => true,
+                'full_name'      => $nome,
+                'record_number'  => 'PRT' . str_pad($i + 1001, 5, '0', STR_PAD_LEFT),
+                'birth_date'     => $nascimento->format('Y-m-d'),
+                'sex'            => $sexo,
+                'race'           => $racas[array_rand($racas)],
+                'phone'          => '(11) 9' . rand(1000, 9999) . '-' . rand(1000, 9999),
+                'active'         => true,
+                'created_by_id'  => $users[array_rand($users)],
             ]);
 
             // Cada paciente tem histórico de 1-3 cateteres
@@ -70,7 +69,7 @@ class PatientSeeder extends Seeder
                     default            => $maxDays + rand(5, 30),    // histórico (já retirados)
                 };
 
-                $insertionDate = Carbon::now()->subDays($daysOffset);
+                $insertionDate = Carbon::now()->subDays($daysOffset)->setTime(rand(6, 22), rand(0, 59));
                 $minRemoval = $insertionDate->copy()->addDays($minDays);
                 $maxRemoval = $insertionDate->copy()->addDays($maxDays);
                 $removedAt = (!$isLast || $numCateteres > 1 && !$isLast)
@@ -98,6 +97,7 @@ class PatientSeeder extends Seeder
                     'min_removal_date'      => $minRemoval,
                     'max_removal_date'      => $maxRemoval,
                     'removed_at'            => $removedAt,
+                    'removed_by_id'         => $removedAt ? $users[array_rand($users)] : null,
                 ]);
             }
         }
