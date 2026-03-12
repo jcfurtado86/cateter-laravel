@@ -4,7 +4,7 @@
 
     @if($showEditModal)
         <div class="modal-overlay" wire:click="$set('showEditModal', false)" x-data @keydown.escape.window="$wire.set('showEditModal', false)">
-            <div class="modal" wire:click.stop>
+            <div class="modal" @click.stop>
                 <div class="modal-header">
                     <h2>Editar Perfil</h2>
                     <button class="modal-close" wire:click="$set('showEditModal', false)">×</button>
@@ -35,7 +35,7 @@
 
     @if($showPasswordModal)
         <div class="modal-overlay" wire:click="$set('showPasswordModal', false)" x-data @keydown.escape.window="$wire.set('showPasswordModal', false)">
-            <div class="modal" wire:click.stop>
+            <div class="modal" @click.stop>
                 <div class="modal-header">
                     <h2>Alterar Senha</h2>
                     <button class="modal-close" wire:click="$set('showPasswordModal', false)">×</button>

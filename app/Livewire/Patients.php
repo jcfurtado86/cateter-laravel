@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Helpers\AuditHelper;
 use App\Models\Patient;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -31,7 +32,7 @@ class Patients extends Component
 
     private function authorizeDoctor(): void
     {
-        abort_if(auth()->user()->role !== 'DOCTOR', 403);
+        Gate::authorize('manage', Patient::class);
     }
 
     public function openNew(): void
@@ -85,23 +86,11 @@ class Patients extends Component
                 $oldValues = $patient->only(array_keys($data));
                 $patient->update($data);
 
-                AuditHelper::logAction(
-                    'updated',
-                    $patient,
-                    $oldValues,
-                    $data
-                );
+                AuditHelper::logAction('patient.updated', $patient, $oldValues, $data);
 
                 $this->dispatch('toast', message: 'Paciente atualizado com sucesso!');
             } else {
                 $newPatient = Patient::create(array_merge($data, ['created_by_id' => auth()->id()]));
-
-                AuditHelper::logAction(
-                    'inserted',
-                    $newPatient,
-                    null,
-                    $newPatient->only(array_keys($data))
-                );
 
                 $this->dispatch('toast', message: 'Paciente cadastrado com sucesso!');
             }

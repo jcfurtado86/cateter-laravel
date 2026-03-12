@@ -198,7 +198,7 @@
 
     @if($showNotifModal)
         <div class="modal-overlay" wire:click="$set('showNotifModal', false)" x-data @keydown.escape.window="$wire.set('showNotifModal', false)">
-            <div class="modal" wire:click.stop>
+            <div class="modal" @click.stop>
                 <div class="modal-header">
                     <h2>Enviar Notificação</h2>
                     <button class="modal-close" wire:click="$set('showNotifModal', false)">×</button>

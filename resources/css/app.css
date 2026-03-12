@@ -135,9 +135,10 @@ body {
 .mt-4 { margin-top: 24px; }
 
 /* Data list */
-.data-list { display: grid; grid-template-columns: auto 1fr; gap: 4px 64px; font-size: 13px; }
+.data-list { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
 .data-list dt { color: var(--gray-500); font-weight: 500; }
 .data-list dd { color: var(--gray-900); }
+.modal .data-list { gap: 4px 64px; }
 
 /* Detail modal */
 .detail-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--gray-400); margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-200); }

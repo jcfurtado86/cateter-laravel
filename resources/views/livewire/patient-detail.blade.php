@@ -86,27 +86,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($patient->catheterRecords->sortBy(fn($r) => [is_null($r->removed_at) ? 0 : 1, -$r->insertion_date->timestamp]) as $r)
+                        @foreach($patient->catheterRecords->sortBy(fn($catheter) => [is_null($catheter->removed_at) ? 0 : 1, -$catheter->insertion_date->timestamp]) as $catheter)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($r->insertion_date)->format('d/m/Y H:i') }}</td>
-                                <td>{{ $r->procedure_type === 'ELETIVO' ? 'Eletivo' : 'Urgência' }}</td>
-                                <td>{{ $r->indication }}</td>
-                                <td>{{ $r->caliber }}</td>
-                                <td>{{ \Carbon\Carbon::parse($r->max_removal_date)->format('d/m/Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($catheter->insertion_date)->format('d/m/Y H:i') }}</td>
+                                <td>{{ $catheter->procedure_type === 'ELETIVO' ? 'Eletivo' : 'Urgência' }}</td>
+                                <td>{{ $catheter->indication }}</td>
+                                <td>{{ $catheter->caliber }}</td>
+                                <td>{{ \Carbon\Carbon::parse($catheter->max_removal_date)->format('d/m/Y') }}</td>
                                 <td>
-                                    @if($r->removed_at)
-                                        {{ \Carbon\Carbon::parse($r->removed_at)->format('d/m/Y H:i') }}
+                                    @if($catheter->removed_at)
+                                        {{ \Carbon\Carbon::parse($catheter->removed_at)->format('d/m/Y H:i') }}
                                     @else
                                         <span class="badge badge-active">Ativo</span>
                                     @endif
                                 </td>
-                                <td>{{ $r->createdBy->name }}</td>
-                                <td>{{ $r->removedBy?->name ?? '—' }}</td>
+                                <td>{{ $catheter->createdBy->name }}</td>
+                                <td>{{ $catheter->removedBy?->name ?? '—' }}</td>
                                 <td>
-                                    @if(!$r->removed_at && auth()->user()->role === 'DOCTOR')
-                                        <button wire:click="openEditCatheter('{{ $r->id }}')" class="btn btn-secondary btn-xs">Editar</button>
-                                    @elseif($r->removed_at)
-                                        <button wire:click="openDetailModal('{{ $r->id }}')" class="btn btn-secondary btn-xs">Ver detalhes</button>
+                                    @if(!$catheter->removed_at && auth()->user()->role === 'DOCTOR')
+                                        <button wire:click="openEditCatheter('{{ $catheter->id }}')" class="btn btn-secondary btn-xs">Editar</button>
+                                    @elseif($catheter->removed_at)
+                                        <button wire:click="openDetailModal('{{ $catheter->id }}')" class="btn btn-secondary btn-xs">Ver detalhes</button>
                                     @endif
                                 </td>
                             </tr>
@@ -120,7 +120,7 @@
     {{-- Modal Notificação --}}
     @if($showNotifModal)
         <div class="modal-overlay" wire:click="$set('showNotifModal', false)" x-data @keydown.escape.window="$wire.set('showNotifModal', false)">
-            <div class="modal" wire:click.stop>
+            <div class="modal" @click.stop>
                 <div class="modal-header">
                     <h2>Enviar Notificação</h2>
                     <button class="modal-close" wire:click="$set('showNotifModal', false)">×</button>
@@ -150,7 +150,7 @@
     {{-- Modal Cateter --}}
     @if($showCatheterModal)
         <div class="modal-overlay" wire:click="$set('showCatheterModal', false)" x-data @keydown.escape.window="$wire.set('showCatheterModal', false)">
-            <div class="modal modal-lg" wire:click.stop>
+            <div class="modal modal-lg" @click.stop>
                 <div class="modal-header">
                     <h2>{{ $editingCatheterId ? 'Editar Cateter' : 'Registrar Cateter' }}</h2>
                     <button class="modal-close" wire:click="$set('showCatheterModal', false)">×</button>
@@ -235,7 +235,7 @@
     {{-- Modal Detalhes Cateter --}}
     @if($showDetailModal && $detailRecord)
         <div class="modal-overlay" wire:click="$set('showDetailModal', false)" x-data @keydown.escape.window="$wire.set('showDetailModal', false)">
-            <div class="modal" wire:click.stop>
+            <div class="modal" @click.stop>
                 <div class="modal-header">
                     <h2>Detalhes do Cateter</h2>
                     <button class="modal-close" wire:click="$set('showDetailModal', false)">×</button>

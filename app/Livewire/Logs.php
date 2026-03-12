@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\AuditLog;
 use App\Models\AuthLog;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -18,7 +19,7 @@ class Logs extends Component
 
     public function mount(): void
     {
-        abort_if(auth()->user()->role !== 'ADMIN', 403);
+        Gate::authorize('admin-only');
     }
 
     public function updatingTab(): void    { $this->resetPage(); }
@@ -39,7 +40,7 @@ class Logs extends Component
             if ($this->search) {
                 $query->where(function ($q) {
                     $q->where('email', 'ilike', "%{$this->search}%")
-                      ->orWhereHas('user', fn($u) => $u->where('name', 'ilike', "%{$this->search}%"));
+                      ->orWhereHas('user', fn($user) => $user->where('name', 'ilike', "%{$this->search}%"));
                 });
             }
             if ($this->dateFrom) $query->whereDate('created_at', '>=', $this->dateFrom);
@@ -52,7 +53,7 @@ class Logs extends Component
             if ($this->search) {
                 $query->where(function ($q) {
                     $q->where('action', 'ilike', "%{$this->search}%")
-                      ->orWhereHas('user', fn($u) => $u->where('name', 'ilike', "%{$this->search}%"));
+                      ->orWhereHas('user', fn($user) => $user->where('name', 'ilike', "%{$this->search}%"));
                 });
             }
             if ($this->dateFrom) $query->whereDate('created_at', '>=', $this->dateFrom);

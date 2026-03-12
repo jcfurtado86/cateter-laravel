@@ -2,15 +2,18 @@
 
 namespace App\Livewire;
 
-use App\Models\AuditLog;
+use App\Helpers\AuditHelper;
+use App\Livewire\Concerns\HasNotificationModal;
 use App\Models\CatheterRecord;
-use App\Models\Notification;
 use App\Models\Patient;
-use Illuminate\Support\Str;
+use App\Services\NotificationService;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class PatientDetail extends Component
 {
+    use HasNotificationModal;
+
     public string $patientId;
     public ?Patient $patient = null;
 
@@ -33,11 +36,6 @@ class PatientDetail extends Component
     public bool $showDetailModal = false;
     public ?array $detailRecord = null;
 
-    // Modal notificação
-    public bool $showNotifModal = false;
-    public string $notifPhone   = '';
-    public string $notifMessage = '';
-
     public function mount(string $id): void
     {
         $this->patientId = $id;
@@ -51,7 +49,7 @@ class PatientDetail extends Component
 
     private function authorizeDoctor(): void
     {
-        abort_if(auth()->user()->role !== 'DOCTOR', 403);
+        Gate::authorize('manage', CatheterRecord::class);
     }
 
     public function openNewCatheter(): void
@@ -75,18 +73,18 @@ class PatientDetail extends Component
     public function openEditCatheter(string $id): void
     {
         $this->authorizeDoctor();
-        $r = CatheterRecord::findOrFail($id);
+        $catheter = CatheterRecord::findOrFail($id);
         $this->editingCatheterId   = $id;
-        $this->insertionDate       = \Carbon\Carbon::parse($r->insertion_date)->format('Y-m-d\TH:i');
-        $this->procedureType       = $r->procedure_type;
-        $this->indication          = $r->indication;
-        $this->caliber             = $r->caliber;
-        $this->insertionSide       = $r->insertion_side;
-        $this->passageType         = $r->passage_type;
-        $this->safetyWire          = (bool) $r->safety_wire;
-        $this->hadPreviousCatheter = (bool) $r->had_previous_catheter;
-        $this->minDays             = $r->min_days;
-        $this->maxDays             = $r->max_days;
+        $this->insertionDate       = \Carbon\Carbon::parse($catheter->insertion_date)->format('Y-m-d\TH:i');
+        $this->procedureType       = $catheter->procedure_type;
+        $this->indication          = $catheter->indication;
+        $this->caliber             = $catheter->caliber;
+        $this->insertionSide       = $catheter->insertion_side;
+        $this->passageType         = $catheter->passage_type;
+        $this->safetyWire          = (bool) $catheter->safety_wire;
+        $this->hadPreviousCatheter = (bool) $catheter->had_previous_catheter;
+        $this->minDays             = $catheter->min_days;
+        $this->maxDays             = $catheter->max_days;
         $this->formError           = '';
         $this->showCatheterModal   = true;
     }
@@ -120,7 +118,12 @@ class PatientDetail extends Component
         ];
 
         if ($this->editingCatheterId) {
-            CatheterRecord::findOrFail($this->editingCatheterId)->update($data);
+            $catheter  = CatheterRecord::findOrFail($this->editingCatheterId);
+            $oldValues = $catheter->only(array_keys($data));
+            $catheter->update($data);
+
+            AuditHelper::logAction('catheter.updated', $catheter, $oldValues, $data);
+
             $this->dispatch('toast', message: 'Cateter atualizado com sucesso!');
         } else {
             CatheterRecord::create(array_merge($data, [
@@ -137,94 +140,51 @@ class PatientDetail extends Component
     public function removeCatheter(string $id): void
     {
         $this->authorizeDoctor();
-        CatheterRecord::findOrFail($id)->update(['removed_at' => now(), 'removed_by_id' => auth()->id()]);
+        $catheter = CatheterRecord::findOrFail($id);
+        $catheter->update(['removed_at' => now(), 'removed_by_id' => auth()->id()]);
+
+        AuditHelper::logAction('catheter.removed', $catheter, ['removed_at' => null], ['removed_at' => $catheter->removed_at->toDateTimeString()]);
+
         $this->loadPatient();
         $this->dispatch('toast', message: 'Retirada registrada com sucesso!');
     }
 
     public function openDetailModal(string $id): void
     {
-        $r = CatheterRecord::with(['createdBy', 'removedBy'])->findOrFail($id);
+        $catheter = CatheterRecord::with(['createdBy', 'removedBy'])->findOrFail($id);
         $this->detailRecord = [
-            'insertion_date'        => \Carbon\Carbon::parse($r->insertion_date)->format('d/m/Y H:i'),
-            'procedure_type'        => $r->procedure_type === 'ELETIVO' ? 'Eletivo' : 'Urgência',
-            'indication'            => $r->indication,
-            'caliber'               => $r->caliber,
-            'insertion_side'        => $r->insertion_side === 'DIREITO' ? 'Direito' : 'Esquerdo',
-            'passage_type'          => $r->passage_type,
-            'safety_wire'           => $r->safety_wire ? 'Sim' : 'Não',
-            'had_previous_catheter' => $r->had_previous_catheter ? 'Sim' : 'Não',
-            'min_removal_date'      => \Carbon\Carbon::parse($r->min_removal_date)->format('d/m/Y'),
-            'max_removal_date'      => \Carbon\Carbon::parse($r->max_removal_date)->format('d/m/Y'),
-            'removed_at'            => \Carbon\Carbon::parse($r->removed_at)->format('d/m/Y H:i'),
-            'created_by'            => $r->createdBy->name,
-            'removed_by'            => $r->removedBy?->name ?? '—',
+            'insertion_date'        => \Carbon\Carbon::parse($catheter->insertion_date)->format('d/m/Y H:i'),
+            'procedure_type'        => $catheter->procedure_type === 'ELETIVO' ? 'Eletivo' : 'Urgência',
+            'indication'            => $catheter->indication,
+            'caliber'               => $catheter->caliber,
+            'insertion_side'        => $catheter->insertion_side === 'DIREITO' ? 'Direito' : 'Esquerdo',
+            'passage_type'          => $catheter->passage_type,
+            'safety_wire'           => $catheter->safety_wire ? 'Sim' : 'Não',
+            'had_previous_catheter' => $catheter->had_previous_catheter ? 'Sim' : 'Não',
+            'min_removal_date'      => \Carbon\Carbon::parse($catheter->min_removal_date)->format('d/m/Y'),
+            'max_removal_date'      => \Carbon\Carbon::parse($catheter->max_removal_date)->format('d/m/Y'),
+            'removed_at'            => \Carbon\Carbon::parse($catheter->removed_at)->format('d/m/Y H:i'),
+            'created_by'            => $catheter->createdBy->name,
+            'removed_by'            => $catheter->removedBy?->name ?? '—',
         ];
         $this->showDetailModal = true;
     }
 
     public function openNotifModal(): void
     {
-        $this->notifPhone   = $this->patient->phone ?? '';
-        $this->notifMessage = $this->buildMessage();
-        $this->showNotifModal = true;
-    }
-
-    private function buildMessage(): string
-    {
-        $name   = $this->patient->full_name;
         $active = $this->patient->catheterRecords->whereNull('removed_at')->first();
 
+        $this->notifPatientId = $this->patientId;
+        $this->notifPhone     = $this->patient->phone ?? '';
+
         if (!$active) {
-            return "Olá! Este é um aviso do Hospital referente ao paciente {$name}. Não há cateter ativo no momento.";
-        }
-
-        $insertionDate  = \Carbon\Carbon::parse($active->insertion_date)->format('d/m/Y');
-        $maxRemovalDate = \Carbon\Carbon::parse($active->max_removal_date)->format('d/m/Y');
-        $days           = (int) ceil((strtotime($active->max_removal_date) - time()) / 86400);
-
-        if ($days <= 0) {
-            $status = "O prazo de retirada está VENCIDO desde {$maxRemovalDate}. A retirada é urgente.";
-        } elseif ($days === 1) {
-            $status = "O prazo de retirada é AMANHÃ ({$maxRemovalDate}). A retirada deve ser agendada com urgência.";
-        } elseif ($days <= 3) {
-            $status = "O prazo de retirada vence em {$days} dias ({$maxRemovalDate}). Por favor, agende a retirada.";
+            $name = $this->patient->full_name;
+            $this->notifMessage = "Olá! Este é um aviso do Hospital referente ao paciente {$name}. Não há cateter ativo no momento.";
         } else {
-            $status = "O prazo máximo para retirada é {$maxRemovalDate} ({$days} dias restantes).";
+            $this->notifMessage = app(NotificationService::class)->buildMessage($active);
         }
 
-        return "Olá! Este é um aviso do Hospital referente ao paciente {$name}.\n\nCateter inserido em {$insertionDate} — indicação: {$active->indication}.\n{$status}";
-    }
-
-    public function sendNotification(): void
-    {
-        $this->validate([
-            'notifPhone'   => 'required|string',
-            'notifMessage' => 'required|string',
-        ]);
-
-        Notification::create([
-            'id'         => Str::uuid(),
-            'patient_id' => $this->patientId,
-            'sent_by_id' => auth()->id(),
-            'phone'      => $this->notifPhone,
-            'type'       => 'MANUAL',
-            'message'    => $this->notifMessage,
-            'status'     => 'SENT',
-            'sent_at'    => now(),
-        ]);
-
-        AuditLog::create([
-            'user_id'    => auth()->id(),
-            'action'     => 'notification.sent',
-            'model_type' => 'Patient',
-            'model_id'   => $this->patientId,
-            'new_values' => ['phone' => $this->notifPhone, 'message' => $this->notifMessage],
-            'ip_address' => request()->ip(),
-        ]);
-
-        $this->showNotifModal = false;
-        $this->dispatch('toast', message: 'Notificação registrada com sucesso!');
+        $this->showNotifModal = true;
     }
 
     public function render()

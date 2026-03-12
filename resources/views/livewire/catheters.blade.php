@@ -34,29 +34,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($records as $r)
+                    @foreach($records as $record)
                         @php
                             $labels = ['overdue' => 'Vencido', 'urgent' => 'Urgente', 'warning' => 'Atenção', 'ok' => 'OK'];
                         @endphp
                         <tr>
-                            <td>{{ $r->patient->full_name }}</td>
-                            <td>{{ $r->patient->record_number }}</td>
-                            <td>{{ $r->indication }}</td>
-                            <td>{{ $r->caliber }}</td>
-                            <td>{{ \Carbon\Carbon::parse($r->insertion_date)->format('d/m/Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($r->min_removal_date)->format('d/m/Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($r->max_removal_date)->format('d/m/Y') }}</td>
-                            <td class="{{ $r->days_left <= 0 ? 'text-danger' : '' }}">
-                                {{ $r->days_left <= 0 ? 'VENCIDO' : $r->days_left.'d' }}
+                            <td>{{ $record->patient->full_name }}</td>
+                            <td>{{ $record->patient->record_number }}</td>
+                            <td>{{ $record->indication }}</td>
+                            <td>{{ $record->caliber }}</td>
+                            <td>{{ \Carbon\Carbon::parse($record->insertion_date)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($record->min_removal_date)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($record->max_removal_date)->format('d/m/Y') }}</td>
+                            <td class="{{ $record->days_left <= 0 ? 'text-danger' : '' }}">
+                                {{ $record->days_left <= 0 ? 'VENCIDO' : $record->days_left.'d' }}
                             </td>
-                            <td><span class="alert-badge {{ $r->alert_level }}">{{ $labels[$r->alert_level] }}</span></td>
-                            <td>{{ $r->createdBy->name }}</td>
+                            <td><span class="alert-badge {{ $record->alert_level }}">{{ $labels[$record->alert_level] }}</span></td>
+                            <td>{{ $record->createdBy->name }}</td>
                             <td class="actions-cell">
-                                <a href="{{ route('patients.show', $r->patient->id) }}" class="btn btn-secondary btn-xs">Ver</a>
-                                <button wire:click="openNotifModal('{{ $r->id }}')" class="btn btn-success btn-xs">Notificar</button>
-                                <button wire:click="remove('{{ $r->id }}')"
+                                <a href="{{ route('patients.show', $record->patient->id) }}" class="btn btn-secondary btn-xs">Ver</a>
+                                <button wire:click="openNotifModal('{{ $record->id }}')" class="btn btn-success btn-xs">Notificar</button>
+                                @can('manage', \App\Models\CatheterRecord::class)
+                                <button wire:click="remove('{{ $record->id }}')"
                                         wire:confirm="Confirmar retirada do cateter?"
                                         class="btn btn-danger btn-xs">Retirar</button>
+                                @endcan
                             </td>
                         </tr>
                     @endforeach
@@ -68,7 +70,7 @@
 
     @if($showNotifModal)
         <div class="modal-overlay" wire:click="$set('showNotifModal', false)" x-data @keydown.escape.window="$wire.set('showNotifModal', false)">
-            <div class="modal" wire:click.stop>
+            <div class="modal" @click.stop>
                 <div class="modal-header">
                     <h2>Enviar Notificação</h2>
                     <button class="modal-close" wire:click="$set('showNotifModal', false)">×</button>

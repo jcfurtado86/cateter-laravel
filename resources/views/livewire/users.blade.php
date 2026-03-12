@@ -17,24 +17,24 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse($users as $u)
+                @forelse($users as $user)
                     <tr>
-                        <td>{{ $u->name }}</td>
-                        <td>{{ $u->email }}</td>
-                        <td>{{ $u->role === 'ADMIN' ? 'Administrador' : 'Médico' }}</td>
+                        <td>{{ $user->name }}</td>
+                        <td>{{ $user->email }}</td>
+                        <td>{{ $user->role === 'ADMIN' ? 'Administrador' : 'Médico' }}</td>
                         <td>
-                            <span class="badge {{ $u->active ? 'badge-active' : 'badge-inactive' }}">
-                                {{ $u->active ? 'Ativo' : 'Inativo' }}
+                            <span class="badge {{ $user->active ? 'badge-active' : 'badge-inactive' }}">
+                                {{ $user->active ? 'Ativo' : 'Inativo' }}
                             </span>
                         </td>
                         <td class="actions-cell">
-                            <button wire:click="openEdit('{{ $u->id }}')" class="btn btn-secondary btn-xs">Editar</button>
-                            @if($u->active)
-                                <button wire:click="deactivate('{{ $u->id }}')"
+                            <button wire:click="openEdit('{{ $user->id }}')" class="btn btn-secondary btn-xs">Editar</button>
+                            @if($user->active)
+                                <button wire:click="deactivate('{{ $user->id }}')"
                                         wire:confirm="Desativar este usuário?"
                                         class="btn btn-danger btn-xs">Desativar</button>
                             @else
-                                <button wire:click="activate('{{ $u->id }}')"
+                                <button wire:click="activate('{{ $user->id }}')"
                                         wire:confirm="Reativar este usuário?"
                                         class="btn btn-success btn-xs">Ativar</button>
                             @endif
@@ -50,7 +50,7 @@
 
     @if($showModal)
         <div class="modal-overlay" wire:click="$set('showModal', false)" x-data @keydown.escape.window="$wire.set('showModal', false)">
-            <div class="modal" wire:click.stop>
+            <div class="modal" @click.stop>
                 <div class="modal-header">
                     <h2>{{ $editingId ? 'Editar Usuário' : 'Novo Usuário' }}</h2>
                     <button class="modal-close" wire:click="$set('showModal', false)">×</button>

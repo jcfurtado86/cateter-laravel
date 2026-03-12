@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Helpers\AuditHelper;
 use App\Models\User;
 use App\Notifications\NewUserPasswordNotification;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -16,7 +17,7 @@ class Users extends Component
 
     public function mount(): void
     {
-        abort_if(auth()->user()->role !== 'ADMIN', 403);
+        Gate::authorize('admin-only');
     }
 
     public bool $showModal = false;
@@ -36,11 +37,11 @@ class Users extends Component
 
     public function openEdit(string $id): void
     {
-        $u = User::findOrFail($id);
+        $user = User::findOrFail($id);
         $this->editingId = $id;
-        $this->name = $u->name;
-        $this->email = $u->email;
-        $this->role = $u->role;
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->role = $user->role;
         $this->formError = '';
         $this->showModal = true;
     }
@@ -63,7 +64,7 @@ class Users extends Component
 
                 $user->update($data);
 
-                AuditHelper::logAction('updated', $user, $oldValues, $data);
+                AuditHelper::logAction('user.updated', $user, $oldValues, $data);
 
                 $this->dispatch('toast', message: 'Usuário atualizado com sucesso!');
             } else {
@@ -79,7 +80,7 @@ class Users extends Component
                 $newUser->notify(new NewUserPasswordNotification($plainPassword));
 
                 AuditHelper::logAction(
-                    'inserted',
+                    'user.created',
                     $newUser,
                     null,
                     $newUser->only(['name', 'email', 'role'])
@@ -101,7 +102,7 @@ class Users extends Component
         $user->update(['active' => false]);
 
         AuditHelper::logAction(
-            'deactivated',
+            'user.deactivated',
             $user,
             ['active' => true],
             ['active' => false]
@@ -116,7 +117,7 @@ class Users extends Component
         $user->update(['active' => true]);
 
         AuditHelper::logAction(
-            'activated',
+            'user.activated',
             $user,
             ['active' => false],
             ['active' => true]

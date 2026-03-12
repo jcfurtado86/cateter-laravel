@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Helpers\AuditHelper;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 
@@ -46,7 +47,11 @@ class Profile extends Component
             }
         }
 
+        $oldValues = $user->only(['name', 'email']);
         $user->update(['name' => $this->editName, 'email' => $this->editEmail]);
+
+        AuditHelper::logAction('user.profile_updated', $user, $oldValues, ['name' => $this->editName, 'email' => $this->editEmail]);
+
         $this->showEditModal = false;
         $this->dispatch('toast', message: 'Perfil atualizado com sucesso!');
     }
@@ -74,7 +79,11 @@ class Profile extends Component
             return;
         }
 
-        auth()->user()->update(['password_hash' => Hash::make($this->newPassword)]);
+        $user = auth()->user();
+        $user->update(['password_hash' => Hash::make($this->newPassword)]);
+
+        AuditHelper::logAction('user.password_changed', $user, null, null);
+
         $this->showPasswordModal = false;
         $this->dispatch('toast', message: 'Senha alterada com sucesso!');
     }
