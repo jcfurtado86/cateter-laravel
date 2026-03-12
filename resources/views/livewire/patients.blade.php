@@ -116,8 +116,19 @@
                         </div>
                         <div class="form-group">
                             <label>Telefone</label>
-                            <input type="tel" wire:model="phone" maxlength="15"
-                                x-mask:dynamic="$input.replace(/\D/g,'').length > 10 ? '(##) #####-####' : '(##) ####-####'" />
+                            <input type="tel" maxlength="15"
+                                x-data
+                                x-init="$el.value = $wire.phone ?? ''"
+                                x-on:input="
+                                    let d = $el.value.replace(/\D/g,'').slice(0,11);
+                                    let f = d.length > 6
+                                        ? '(' + d.slice(0,2) + ') ' + d.slice(2,7) + '-' + d.slice(7)
+                                        : d.length > 2
+                                            ? '(' + d.slice(0,2) + ') ' + d.slice(2)
+                                            : d.length ? '(' + d : d;
+                                    $el.value = f;
+                                    $wire.set('phone', f);
+                                " />
                         </div>
                     </div>
                     <div class="modal-actions">
