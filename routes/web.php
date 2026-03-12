@@ -6,6 +6,7 @@ use App\Livewire\Patients;
 use App\Livewire\PatientDetail;
 use App\Livewire\Catheters;
 use App\Livewire\Users;
+use App\Livewire\Logs;
 use App\Livewire\Notifications;
 
 Route::redirect('/', '/dashboard');
@@ -17,6 +18,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/catheters', Catheters::class)->name('catheters');
     Route::get('/notifications', Notifications::class)->name('notifications');
     Route::get('/users', Users::class)->name('users');
+    Route::get('/logs', Logs::class)->name('logs');
 });
 
 require __DIR__.'/auth.php';

@@ -2,9 +2,10 @@
 
 namespace App\Livewire;
 
-use App\Models\Patient;
+use App\Models\AuditLog;
 use App\Models\CatheterRecord;
 use App\Models\Notification;
+use App\Models\Patient;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
@@ -211,6 +212,15 @@ class PatientDetail extends Component
             'message'    => $this->notifMessage,
             'status'     => 'SENT',
             'sent_at'    => now(),
+        ]);
+
+        AuditLog::create([
+            'user_id'    => auth()->id(),
+            'action'     => 'notification.sent',
+            'model_type' => 'Patient',
+            'model_id'   => $this->patientId,
+            'new_values' => ['phone' => $this->notifPhone, 'message' => $this->notifMessage],
+            'ip_address' => request()->ip(),
         ]);
 
         $this->showNotifModal = false;

@@ -22,6 +22,7 @@
                 <a href="{{ route('notifications') }}" class="nav-item {{ request()->routeIs('notifications') ? 'active' : '' }}">Notificações</a>
                 @if(auth()->user()->role === 'ADMIN')
                     <a href="{{ route('users') }}" class="nav-item {{ request()->routeIs('users') ? 'active' : '' }}">Usuários</a>
+                    <a href="{{ route('logs') }}" class="nav-item {{ request()->routeIs('logs') ? 'active' : '' }}">Logs</a>
                 @endif
             </nav>
             <div class="sidebar-footer">
