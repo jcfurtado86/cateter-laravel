@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Helpers\AuditHelper;
 use App\Models\CatheterRecord;
 use App\Models\Notification;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -57,7 +58,7 @@ class Catheters extends Component
             'notifMessage' => 'required|string',
         ]);
 
-        Notification::create([
+        $notification = Notification::create([
             'id'         => Str::uuid(),
             'patient_id' => $this->notifPatientId,
             'sent_by_id' => auth()->id(),
@@ -67,6 +68,13 @@ class Catheters extends Component
             'status'     => 'SENT',
             'sent_at'    => now(),
         ]);
+
+        AuditHelper::logAction(
+            'sent',
+            $notification,
+            null,
+            $notification->only(['phone', 'type', 'message', 'status'])
+        );
 
         $this->showNotifModal = false;
         $this->dispatch('toast', message: 'Notificação registrada com sucesso!');
@@ -79,7 +87,16 @@ class Catheters extends Component
 
     public function remove(string $id): void
     {
-        CatheterRecord::findOrFail($id)->update(['removed_at' => now()]);
+        $catheter = CatheterRecord::findOrFail($id);
+        $catheter->update(['removed_at' => now()]);
+
+        AuditHelper::logAction(
+            'removed',
+            $catheter,
+            ['removed_at' => null],
+            ['removed_at' => $catheter->removed_at->toDateTimeString()]
+        );
+
         $this->dispatch('toast', message: 'Retirada registrada com sucesso!');
     }
 

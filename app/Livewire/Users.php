@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Helpers\AuditHelper;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
@@ -59,17 +60,40 @@ class Users extends Component
 
         try {
             if ($this->editingId) {
+                $user = User::findOrFail($this->editingId);
                 $data = ['name' => $this->name, 'email' => $this->email, 'role' => $this->role];
-                if ($this->password) $data['password_hash'] = Hash::make($this->password);
-                User::findOrFail($this->editingId)->update($data);
+                $oldValues = $user->only(['name', 'email', 'role']);
+
+                if ($this->password) {
+                    $data['password_hash'] = Hash::make($this->password);
+                    $oldValues['password_hash'] = $user->password_hash;
+                }
+
+                $user->update($data);
+
+                AuditHelper::logAction(
+                    'updated',
+                    $user,
+                    $oldValues,
+                    collect($data)->except('password_hash')->toArray()
+                );
+
                 $this->dispatch('toast', message: 'Usuário atualizado com sucesso!');
             } else {
-                User::create([
+                $newUser = User::create([
                     'name'          => $this->name,
                     'email'         => $this->email,
                     'password_hash' => Hash::make($this->password),
                     'role'          => $this->role,
                 ]);
+
+                AuditHelper::logAction(
+                    'inserted',
+                    $newUser,
+                    null,
+                    $newUser->only(['name', 'email', 'role'])
+                );
+
                 $this->dispatch('toast', message: 'Usuário criado com sucesso!');
             }
             $this->showModal = false;
@@ -82,13 +106,31 @@ class Users extends Component
 
     public function deactivate(string $id): void
     {
-        User::findOrFail($id)->update(['active' => false]);
+        $user = User::findOrFail($id);
+        $user->update(['active' => false]);
+
+        AuditHelper::logAction(
+            'deactivated',
+            $user,
+            ['active' => true],
+            ['active' => false]
+        );
+
         $this->dispatch('toast', message: 'Usuário desativado.');
     }
 
     public function activate(string $id): void
     {
-        User::findOrFail($id)->update(['active' => true]);
+        $user = User::findOrFail($id);
+        $user->update(['active' => true]);
+
+        AuditHelper::logAction(
+            'activated',
+            $user,
+            ['active' => false],
+            ['active' => true]
+        );
+
         $this->dispatch('toast', message: 'Usuário reativado.');
     }
 

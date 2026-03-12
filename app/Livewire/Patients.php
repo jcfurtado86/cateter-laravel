@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Helpers\AuditHelper;
 use App\Models\Patient;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -80,10 +81,28 @@ class Patients extends Component
             ];
 
             if ($this->editingId) {
-                Patient::findOrFail($this->editingId)->update($data);
+                $patient = Patient::findOrFail($this->editingId);
+                $oldValues = $patient->only(array_keys($data));
+                $patient->update($data);
+
+                AuditHelper::logAction(
+                    'updated',
+                    $patient,
+                    $oldValues,
+                    $data
+                );
+
                 $this->dispatch('toast', message: 'Paciente atualizado com sucesso!');
             } else {
-                Patient::create(array_merge($data, ['created_by_id' => auth()->id()]));
+                $newPatient = Patient::create(array_merge($data, ['created_by_id' => auth()->id()]));
+
+                AuditHelper::logAction(
+                    'inserted',
+                    $newPatient,
+                    null,
+                    $newPatient->only(array_keys($data))
+                );
+
                 $this->dispatch('toast', message: 'Paciente cadastrado com sucesso!');
             }
 
