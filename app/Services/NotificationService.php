@@ -42,4 +42,18 @@ class NotificationService
             'sent_at'    => now(),
         ]);
     }
+
+    public function sendAuto(CatheterRecord $record, string $type): Notification
+    {
+        return Notification::create([
+            'id'         => Str::uuid(),
+            'patient_id' => $record->patient_id,
+            'sent_by_id' => null,
+            'phone'      => $record->patient->phone,
+            'type'       => $type,
+            'message'    => $this->buildMessage($record),
+            'status'     => 'SENT',
+            'sent_at'    => now(),
+        ]);
+    }
 }
