@@ -113,6 +113,7 @@
     {{-- Modal detalhe --}}
     <div x-data="{ show: false, antes: null, depois: null, modelId: null, modelType: null, action: null }"
          x-on:open-log-detail.window="show = true; antes = $event.detail.antes; depois = $event.detail.depois; modelId = $event.detail.modelId; modelType = $event.detail.modelType; action = $event.detail.action"
+         @keydown.escape.window="show = false"
          x-show="show"
          class="modal-overlay"
          wire:click="$set('showModal', false)">

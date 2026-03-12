@@ -66,7 +66,7 @@
     {{ $patients->links('vendor.pagination.default') }}
 
     @if($showModal)
-        <div class="modal-overlay" wire:click="$set('showModal', false)">
+        <div class="modal-overlay" wire:click="$set('showModal', false)" x-data @keydown.escape.window="$wire.set('showModal', false)">
             <div class="modal" wire:click.stop>
                 <div class="modal-header">
                     <h2>{{ $editingId ? 'Editar Paciente' : 'Novo Paciente' }}</h2>

@@ -3,7 +3,7 @@
     <button wire:click="openPassword" class="btn btn-ghost btn-sm" style="width:100%">Alterar Senha</button>
 
     @if($showEditModal)
-        <div class="modal-overlay" wire:click="$set('showEditModal', false)">
+        <div class="modal-overlay" wire:click="$set('showEditModal', false)" x-data @keydown.escape.window="$wire.set('showEditModal', false)">
             <div class="modal" wire:click.stop>
                 <div class="modal-header">
                     <h2>Editar Perfil</h2>
@@ -34,7 +34,7 @@
     @endif
 
     @if($showPasswordModal)
-        <div class="modal-overlay" wire:click="$set('showPasswordModal', false)">
+        <div class="modal-overlay" wire:click="$set('showPasswordModal', false)" x-data @keydown.escape.window="$wire.set('showPasswordModal', false)">
             <div class="modal" wire:click.stop>
                 <div class="modal-header">
                     <h2>Alterar Senha</h2>

@@ -106,7 +106,7 @@
                                     @if(!$r->removed_at && auth()->user()->role === 'DOCTOR')
                                         <button wire:click="openEditCatheter('{{ $r->id }}')" class="btn btn-secondary btn-xs">Editar</button>
                                     @elseif($r->removed_at)
-                                        <button wire:click="openDetailModal('{{ $r->id }}')" class="btn btn-ghost btn-xs">Ver detalhes</button>
+                                        <button wire:click="openDetailModal('{{ $r->id }}')" class="btn btn-secondary btn-xs">Ver detalhes</button>
                                     @endif
                                 </td>
                             </tr>
@@ -119,7 +119,7 @@
 
     {{-- Modal Notificação --}}
     @if($showNotifModal)
-        <div class="modal-overlay" wire:click="$set('showNotifModal', false)">
+        <div class="modal-overlay" wire:click="$set('showNotifModal', false)" x-data @keydown.escape.window="$wire.set('showNotifModal', false)">
             <div class="modal" wire:click.stop>
                 <div class="modal-header">
                     <h2>Enviar Notificação</h2>
@@ -149,7 +149,7 @@
 
     {{-- Modal Cateter --}}
     @if($showCatheterModal)
-        <div class="modal-overlay" wire:click="$set('showCatheterModal', false)">
+        <div class="modal-overlay" wire:click="$set('showCatheterModal', false)" x-data @keydown.escape.window="$wire.set('showCatheterModal', false)">
             <div class="modal modal-lg" wire:click.stop>
                 <div class="modal-header">
                     <h2>{{ $editingCatheterId ? 'Editar Cateter' : 'Registrar Cateter' }}</h2>
@@ -234,29 +234,31 @@
 
     {{-- Modal Detalhes Cateter --}}
     @if($showDetailModal && $detailRecord)
-        <div class="modal-overlay" wire:click="$set('showDetailModal', false)">
+        <div class="modal-overlay" wire:click="$set('showDetailModal', false)" x-data @keydown.escape.window="$wire.set('showDetailModal', false)">
             <div class="modal" wire:click.stop>
                 <div class="modal-header">
                     <h2>Detalhes do Cateter</h2>
                     <button class="modal-close" wire:click="$set('showDetailModal', false)">×</button>
                 </div>
-                <dl class="data-list" style="padding:0 4px;">
-                    <dt>Inserção</dt><dd>{{ $detailRecord['insertion_date'] }}</dd>
-                    <dt>Tipo de Procedimento</dt><dd>{{ $detailRecord['procedure_type'] }}</dd>
-                    <dt>Indicação</dt><dd>{{ $detailRecord['indication'] }}</dd>
-                    <dt>Calibre</dt><dd>{{ $detailRecord['caliber'] }}</dd>
-                    <dt>Lado</dt><dd>{{ $detailRecord['insertion_side'] }}</dd>
-                    <dt>Tipo de Passagem</dt><dd>{{ $detailRecord['passage_type'] }}</dd>
-                    <dt>Fio de Segurança</dt><dd>{{ $detailRecord['safety_wire'] }}</dd>
-                    <dt>Cateter Prévio</dt><dd>{{ $detailRecord['had_previous_catheter'] }}</dd>
-                    <dt>Prazo Mín. Retirada</dt><dd>{{ $detailRecord['min_removal_date'] }}</dd>
-                    <dt>Prazo Máx. Retirada</dt><dd>{{ $detailRecord['max_removal_date'] }}</dd>
-                    <dt>Retirado em</dt><dd>{{ $detailRecord['removed_at'] }}</dd>
-                    <dt>Cadastrado por</dt><dd>{{ $detailRecord['created_by'] }}</dd>
-                    <dt>Retirado por</dt><dd>{{ $detailRecord['removed_by'] }}</dd>
-                </dl>
-                <div class="modal-actions" style="margin-top:16px;">
-                    <button class="btn btn-ghost" wire:click="$set('showDetailModal', false)">Fechar</button>
+                <div class="modal-form">
+                    <dl class="data-list">
+                        <dt>Inserção</dt><dd>{{ $detailRecord['insertion_date'] }}</dd>
+                        <dt>Procedimento</dt><dd>{{ $detailRecord['procedure_type'] }}</dd>
+                        <dt>Indicação</dt><dd>{{ $detailRecord['indication'] }}</dd>
+                        <dt>Calibre</dt><dd>{{ $detailRecord['caliber'] ?: '—' }}</dd>
+                        <dt>Lado</dt><dd>{{ $detailRecord['insertion_side'] }}</dd>
+                        <dt>Tipo de Passagem</dt><dd>{{ $detailRecord['passage_type'] ?: '—' }}</dd>
+                        <dt>Fio de Segurança</dt><dd>{{ $detailRecord['safety_wire'] }}</dd>
+                        <dt>Cateter Prévio</dt><dd>{{ $detailRecord['had_previous_catheter'] }}</dd>
+                        <dt>Prazo Mín. Retirada</dt><dd>{{ $detailRecord['min_removal_date'] }}</dd>
+                        <dt>Prazo Máx. Retirada</dt><dd>{{ $detailRecord['max_removal_date'] }}</dd>
+                        <dt>Retirado em</dt><dd>{{ $detailRecord['removed_at'] }}</dd>
+                        <dt>Cadastrado por</dt><dd>{{ $detailRecord['created_by'] }}</dd>
+                        <dt>Retirado por</dt><dd>{{ $detailRecord['removed_by'] }}</dd>
+                    </dl>
+                    <div class="modal-actions">
+                        <button class="btn btn-ghost" wire:click="$set('showDetailModal', false)">Fechar</button>
+                    </div>
                 </div>
             </div>
         </div>
