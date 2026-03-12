@@ -87,6 +87,8 @@ class Catheters extends Component
 
     public function remove(string $id): void
     {
+        abort_if(auth()->user()->role !== 'DOCTOR', 403);
+
         $catheter = CatheterRecord::findOrFail($id);
         $catheter->update(['removed_at' => now()]);
 

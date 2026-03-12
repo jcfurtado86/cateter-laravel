@@ -10,6 +10,11 @@ class Notifications extends Component
 {
     use WithPagination;
 
+    public function mount(): void
+    {
+        abort_if(!auth()->check(), 401);
+    }
+
     public function render()
     {
         $notifications = Notification::with(['patient', 'sentBy'])
