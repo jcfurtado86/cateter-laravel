@@ -70,11 +70,6 @@
                         @error('email') <span class="field-error">{{ $message }}</span> @enderror
                     </div>
                     <div class="form-group">
-                        <label>{{ $editingId ? 'Nova Senha (deixe em branco para manter)' : 'Senha' }}</label>
-                        <input type="password" wire:model="password" autocomplete="new-password" />
-                        @error('password') <span class="field-error">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="form-group">
                         <label>Perfil</label>
                         <select wire:model="role">
                             <option value="DOCTOR">Médico</option>
