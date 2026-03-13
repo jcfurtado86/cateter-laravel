@@ -14,7 +14,7 @@ class NotificationService
         $name           = $record->patient->full_name;
         $insertionDate  = Carbon::parse($record->insertion_date)->format('d/m/Y');
         $maxRemovalDate = Carbon::parse($record->max_removal_date)->format('d/m/Y');
-        $days           = (int) ceil((strtotime($record->max_removal_date) - time()) / 86400);
+        $days           = (int) Carbon::today()->diffInDays(Carbon::parse($record->max_removal_date)->startOfDay(), false);
 
         if ($days <= 0) {
             $status = "O prazo de retirada está VENCIDO desde {$maxRemovalDate}. A retirada é urgente.";

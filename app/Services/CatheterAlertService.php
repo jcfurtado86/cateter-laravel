@@ -3,12 +3,16 @@
 namespace App\Services;
 
 use App\Models\CatheterRecord;
+use Carbon\Carbon;
 
 class CatheterAlertService
 {
     public function daysRemaining(CatheterRecord $record): int
     {
-        return (int) ceil((strtotime($record->max_removal_date) - time()) / 86400);
+        return (int) Carbon::today()->diffInDays(
+            Carbon::parse($record->max_removal_date)->startOfDay(),
+            false
+        );
     }
 
     public function alertLevel(CatheterRecord $record): string

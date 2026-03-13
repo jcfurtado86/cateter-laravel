@@ -113,8 +113,8 @@ class PatientDetail extends Component
             'had_previous_catheter'=> $this->hadPreviousCatheter,
             'min_days'             => $this->minDays,
             'max_days'             => $this->maxDays,
-            'min_removal_date'     => \Carbon\Carbon::parse($this->insertionDate)->addDays($this->minDays),
-            'max_removal_date'     => \Carbon\Carbon::parse($this->insertionDate)->addDays($this->maxDays),
+            'min_removal_date'     => \Carbon\Carbon::parse($this->insertionDate)->startOfDay()->addDays($this->minDays),
+            'max_removal_date'     => \Carbon\Carbon::parse($this->insertionDate)->startOfDay()->addDays($this->maxDays),
         ];
 
         if ($this->editingCatheterId) {

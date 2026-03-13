@@ -40,5 +40,5 @@
             </tbody>
         </table>
     </div>
-    {{ $notifications->links() }}
+    {{ $notifications->links('vendor.pagination.default') }}
 </div>

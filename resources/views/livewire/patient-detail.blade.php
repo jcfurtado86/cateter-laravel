@@ -25,7 +25,7 @@
                 <dd>{{ $patient->birth_date->format('d/m/Y') }} ({{ $patient->birth_date->age }} anos)</dd>
                 <dt>Sexo</dt>
                 <dd>{{ ['M'=>'Masculino','F'=>'Feminino','OUTRO'=>'Outro'][$patient->sex] }}</dd>
-                <dt>Raça</dt><dd>{{ $patient->race }}</dd>
+                <dt>Raça</dt><dd>{{ ['BRANCA'=>'Branca','PARDA'=>'Parda','PRETA'=>'Preta','AMARELA'=>'Amarela','INDIGENA'=>'Indígena','NAO_INFORMADA'=>'Não Informada'][$patient->race] ?? $patient->race }}</dd>
                 <dt>Telefone</dt><dd>{{ $patient->phone }}</dd>
                 @if($patient->createdBy)
                     <dt>Cadastrado por</dt><dd>{{ $patient->createdBy->name }}</dd>
@@ -35,7 +35,7 @@
 
         @foreach($activeRecords as $active)
             @php
-                $days = (int) ceil((strtotime($active->max_removal_date) - time()) / 86400);
+                $days = (int) \Carbon\Carbon::today()->diffInDays(\Carbon\Carbon::parse($active->max_removal_date)->startOfDay(), false);
                 $cardClass = $days <= 0 ? 'card-danger' : ($days <= 3 ? 'card-warning' : '');
             @endphp
             <div class="card {{ $cardClass }}" style="border-top:4px solid {{ $days <= 0 ? '#ef4444' : ($days <= 3 ? '#f59e0b' : '#22c55e') }}; display:flex; flex-direction:column;">

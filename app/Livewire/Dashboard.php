@@ -38,12 +38,13 @@ class Dashboard extends Component
             ->get()
             ->map(function ($record) use ($alertService) {
                 return array_merge($record->toArray(), [
-                    'days_left'     => $alertService->daysRemaining($record),
-                    'alert_level'   => $alertService->alertLevel($record),
-                    'patient_name'  => $record->patient->full_name,
-                    'patient_id'    => $record->patient->id,
-                    'record_number' => $record->patient->record_number,
-                    'phone'         => $record->patient->phone,
+                    'days_left'          => $alertService->daysRemaining($record),
+                    'alert_level'        => $alertService->alertLevel($record),
+                    'patient_name'       => $record->patient->full_name,
+                    'patient_id'         => $record->patient->id,
+                    'record_number'      => $record->patient->record_number,
+                    'phone'              => $record->patient->phone,
+                    'max_removal_date'   => \Carbon\Carbon::parse($record->max_removal_date)->startOfDay()->format('d/m/Y'),
                 ]);
             });
 

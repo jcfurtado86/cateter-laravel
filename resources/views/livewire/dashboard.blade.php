@@ -179,7 +179,7 @@
                                 <td>{{ $r['patient_name'] }}</td>
                                 <td>{{ $r['record_number'] }}</td>
                                 <td>{{ $r['indication'] }}</td>
-                                <td>{{ \Carbon\Carbon::parse($r['max_removal_date'])->format('d/m/Y') }}</td>
+                                <td>{{ $r['max_removal_date'] }}</td>
                                 <td class="{{ $r['days_left'] <= 0 ? 'text-danger' : '' }}">
                                     {{ $r['days_left'] <= 0 ? 'VENCIDO' : $r['days_left'].'d' }}
                                 </td>
