@@ -1,59 +1,296 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Monitoramento de Cateteres
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplicação web hospitalar para controle e monitoramento de cateteres vesicais, com rastreamento de prazos, histórico por paciente, alertas automáticos e notificações.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Stack Utilizada
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Camada | Tecnologia |
+|--------|-----------|
+| Backend | PHP 8.2+ / Laravel 12 |
+| Frontend reativo | Livewire 3 |
+| JavaScript | Alpine.js 3 |
+| CSS | Tailwind CSS 3 (com CSS customizado) |
+| Build | Vite 7 |
+| Banco de dados | PostgreSQL (recomendado) ou SQLite |
+| Autenticação | Laravel Breeze (sessão por banco) |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## Pré-requisitos
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- PHP >= 8.2 com extensões: `pdo_pgsql`, `mbstring`, `openssl`, `tokenizer`, `xml`
+- Composer
+- Node.js >= 18 + npm
+- PostgreSQL >= 14 (ou SQLite para desenvolvimento rápido)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## Como Rodar em Desenvolvimento
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 1. Instalar dependências
 
-### Premium Partners
+```bash
+composer install
+npm install
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 2. Configurar o ambiente
 
-## Contributing
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Edite o `.env` com as configurações do seu banco (ver seção [Variáveis de Ambiente](#variáveis-de-ambiente)).
 
-## Code of Conduct
+### 3. Criar e migrar o banco
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+php artisan migrate
+```
 
-## Security Vulnerabilities
+### 4. Popular com dados de mock
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan db:seed
+```
 
-## License
+Isso cria 2 usuários padrão e 30 pacientes com histórico de cateteres em estados variados (vencidos, urgentes, em atenção, ok).
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 5. Compilar assets
+
+```bash
+npm run build
+# ou em modo watch durante o desenvolvimento:
+npm run dev
+```
+
+### 6. Iniciar o servidor
+
+```bash
+php artisan serve
+```
+
+Acesse: `http://localhost:8000`
+
+---
+
+### Atalho: rodar tudo junto (composer script)
+
+```bash
+composer run dev
+```
+
+Sobe em paralelo: servidor HTTP, queue listener, log watcher e Vite dev server.
+
+---
+
+## Credenciais Padrão (após seed)
+
+| Perfil | E-mail | Senha |
+|--------|--------|-------|
+| Administrador | admin@cateter.com | admin123 |
+| Médico | medico@cateter.com | medico123 |
+
+---
+
+## Variáveis de Ambiente
+
+### Aplicação
+
+| Variável | Descrição | Padrão |
+|----------|-----------|--------|
+| `APP_NAME` | Nome da aplicação exibido na interface | `Laravel` |
+| `APP_ENV` | Ambiente (`local`, `production`) | `local` |
+| `APP_KEY` | Chave de criptografia — gerada com `php artisan key:generate` | — |
+| `APP_DEBUG` | Exibe erros detalhados | `true` |
+| `APP_URL` | URL base da aplicação | `http://localhost` |
+
+### Banco de Dados
+
+Para **PostgreSQL** (recomendado):
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=cateter
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha
+```
+
+Para **SQLite** (desenvolvimento rápido, sem instalar Postgres):
+
+```env
+DB_CONNECTION=sqlite
+# Cria o arquivo automaticamente em database/database.sqlite
+```
+
+### Sessão, Cache e Filas
+
+| Variável | Descrição | Padrão |
+|----------|-----------|--------|
+| `SESSION_DRIVER` | Driver de sessão | `database` |
+| `SESSION_LIFETIME` | Tempo de sessão em minutos | `120` |
+| `QUEUE_CONNECTION` | Driver de fila | `database` |
+| `CACHE_STORE` | Driver de cache | `database` |
+
+### E-mail (opcional)
+
+Por padrão, e-mails são escritos no log (`MAIL_MAILER=log`). Para envio real, configure um servidor SMTP:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.seuservidor.com
+MAIL_PORT=587
+MAIL_USERNAME=seu@email.com
+MAIL_PASSWORD=sua_senha
+MAIL_FROM_ADDRESS=noreply@hospital.com
+MAIL_FROM_NAME="Sistema Cateter"
+```
+
+---
+
+## Rodando o Seed
+
+O seed popula o banco com dados realistas para testes:
+
+```bash
+# Seed completo (usuários + pacientes + cateteres)
+php artisan db:seed
+
+# Limpar o banco e re-seedar do zero
+php artisan migrate:fresh --seed
+```
+
+### O que o seed cria
+
+- **2 usuários**: Administrador e Médico
+- **30 pacientes** com nomes, prontuários, dados demográficos e telefones fictícios
+- **1 a 3 registros de cateter por paciente**, distribuídos em estados variados:
+  - Pacientes 1–5: cateter ativo **vencido**
+  - Pacientes 6–12: cateter ativo vencendo **amanhã (urgente)**
+  - Pacientes 13–20: cateter ativo vencendo em **2–3 dias (atenção)**
+  - Pacientes 21–30: cateter ativo com prazo **confortável**
+  - Cateteres anteriores (histórico) ficam como retirados
+
+---
+
+## Estrutura de Pastas
+
+```
+cateter-laravel/
+├── app/
+│   ├── Console/
+│   │   └── Commands/
+│   │       └── SendCatheterAlerts.php   # Command agendado: envia alertas automáticos
+│   ├── Helpers/
+│   │   └── AuditHelper.php              # Registra ações no log de auditoria
+│   ├── Http/
+│   │   └── Middleware/                  # Middlewares HTTP (autenticação, etc.)
+│   ├── Livewire/
+│   │   ├── Concerns/
+│   │   │   └── HasNotificationModal.php # Trait: lógica do modal de notificação
+│   │   ├── Actions/
+│   │   │   └── Logout.php               # Ação de logout
+│   │   ├── Forms/
+│   │   │   └── LoginForm.php            # Formulário de login
+│   │   ├── Dashboard.php                # Página inicial com alertas e estatísticas
+│   │   ├── Patients.php                 # Listagem e cadastro de pacientes
+│   │   ├── PatientDetail.php            # Detalhes, cateteres e notificações por paciente
+│   │   ├── Catheters.php                # Lista de cateteres ativos com filtros
+│   │   ├── Users.php                    # Gestão de usuários (admin only)
+│   │   ├── Notifications.php            # Histórico de notificações
+│   │   ├── Logs.php                     # Log de auditoria (admin only)
+│   │   └── Profile.php                  # Perfil e troca de senha do usuário
+│   ├── Models/
+│   │   ├── User.php                     # Usuário do sistema (ADMIN ou DOCTOR)
+│   │   ├── Patient.php                  # Paciente
+│   │   ├── CatheterRecord.php           # Registro de cateter
+│   │   ├── Notification.php             # Notificação enviada
+│   │   ├── AuditLog.php                 # Entrada de auditoria
+│   │   └── AuthLog.php                  # Log de autenticação
+│   ├── Policies/
+│   │   ├── PatientPolicy.php            # Autorização: quem pode criar/editar pacientes
+│   │   └── CatheterRecordPolicy.php     # Autorização: quem pode registrar/retirar cateteres
+│   ├── Providers/
+│   │   └── AppServiceProvider.php       # Registro de policies e configurações globais
+│   └── Services/
+│       ├── CatheterAlertService.php     # Calcula dias restantes e nível de alerta
+│       └── NotificationService.php      # Monta e registra notificações (manual e automático)
+│
+├── database/
+│   ├── migrations/                      # Estrutura do banco de dados
+│   └── seeders/
+│       ├── DatabaseSeeder.php           # Orquestra o seed (usuários + chama PatientSeeder)
+│       └── PatientSeeder.php            # Gera 30 pacientes com cateteres em estados variados
+│
+├── resources/
+│   ├── css/
+│   │   └── app.css                      # Estilos customizados (variáveis, layout, componentes)
+│   ├── js/
+│   │   └── app.js                       # Bootstrap do Alpine.js e Livewire
+│   └── views/
+│       ├── layouts/
+│       │   └── app.blade.php            # Layout base com sidebar e toast
+│       ├── livewire/                    # Views dos componentes Livewire
+│       │   ├── dashboard.blade.php
+│       │   ├── patients.blade.php
+│       │   ├── patient-detail.blade.php
+│       │   ├── catheters.blade.php
+│       │   ├── users.blade.php
+│       │   ├── notifications.blade.php
+│       │   ├── logs.blade.php
+│       │   └── profile.blade.php
+│       └── vendor/
+│           └── pagination/
+│               └── default.blade.php    # Template customizado de paginação
+│
+├── routes/
+│   ├── web.php                          # Rotas da aplicação
+│   └── console.php                      # Agendamento: catheters:send-alerts às 08:00
+│
+├── .env.example                         # Template de variáveis de ambiente
+├── composer.json
+└── package.json
+```
+
+---
+
+## Alertas Automáticos
+
+O sistema envia notificações automáticas quando o prazo máximo de retirada se aproxima:
+
+| Tipo | Quando |
+|------|--------|
+| `ALERT_3D` | 3 dias antes do prazo máximo |
+| `ALERT_1D` | 1 dia antes |
+| `ALERT_DUE` | No dia do vencimento |
+| `MANUAL` | Enviado manualmente pelo usuário via interface |
+
+O command é agendado para rodar **diariamente às 08:00**. Em produção, adicione ao crontab do servidor:
+
+```bash
+* * * * * cd /caminho/do/projeto && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Para disparar manualmente:
+
+```bash
+php artisan catheters:send-alerts
+```
+
+---
+
+## Perfis de Acesso
+
+| Ação | ADMIN | DOCTOR |
+|------|-------|--------|
+| Ver dashboard, pacientes, cateteres | ✅ | ✅ |
+| Cadastrar / editar pacientes | ❌ | ✅ |
+| Registrar / editar / retirar cateteres | ❌ | ✅ |
+| Enviar notificações | ✅ | ✅ |
+| Gerenciar usuários | ✅ | ❌ |
+| Ver logs de auditoria | ✅ | ❌ |
